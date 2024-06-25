@@ -19,7 +19,7 @@ jobs:
       - name: Fetch pull request files
         id: fetch_files
         run: |
-          dir_name=release_resources
+          dir_name=root/release_resources
           mkdir -p $dir_name
           echo "dir_name=$dir_name" >> $GITHUB_ENV
           pr_number=${{ github.event.inputs.pr_number }}
