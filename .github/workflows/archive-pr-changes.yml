@@ -16,20 +16,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch pull request branch name
-        id: get_branch
-        run: |
-          pr_number=${{ github.event.inputs.pr_number }}
-          branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
-          echo "::set-output name=branch_name::$branch_name"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Fetch pull request files
         id: fetch_files
         run: |
           pr_number=${{ github.event.inputs.pr_number }}
-          branch_name=${{ steps.get_branch.outputs.branch_name }}
           dir_name=release_resources
           mkdir -p $dir_name
           echo "::set-output name=dir_name::$dir_name"
@@ -62,8 +52,19 @@ jobs:
             fi
           done < $dir_name/modified_files.txt
 
+      - name: Fetch pull request branch name
+        id: get_branch
+        run: |
+          pr_number=${{ github.event.inputs.pr_number }}
+          branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
+          branch_name_escaped=$(echo "$branch_name" | sed 's|/|_|g')
+          echo "::set-output name=branch_name::$branch_name"
+          echo "::set-output name=branch_name_escaped::$branch_name_escaped"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload files artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pr-${{ github.event.inputs.pr_number }}-added-files-${{ steps.get_branch.outputs.branch_name }}
+          name: pr-${{ github.event.inputs.pr_number }}-files-${{ steps.get_branch.outputs.branch_name_escaped }}
           path: ${{ steps.fetch_files.outputs.dir_name }}/
