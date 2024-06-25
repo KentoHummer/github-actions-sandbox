@@ -16,6 +16,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Fetch pull request branch name
+        id: get_branch
+        run: |
+          pr_number=${{ github.event.inputs.pr_number }}
+          branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
+          branch_name_escaped=$(echo "$branch_name" | sed 's|/|_|g')
+          echo "branch_name=$branch_name" >> $GITHUB_ENV
+          echo "branch_name_escaped=$branch_name_escaped" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Fetch pull request files
         id: fetch_files
         run: |
@@ -27,6 +38,9 @@ jobs:
           git diff --name-only --diff-filter=A pr-$pr_number origin/develop > $dir_name/added_files.txt
           git diff --name-only --diff-filter=M pr-$pr_number origin/develop > $dir_name/modified_files.txt
           git diff --name-only --diff-filter=D pr-$pr_number origin/develop > $dir_name/deleted_files.txt
+
+          # test
+          git merge-base ${{ env.branch_name }} origin/develop > $dir_name/merge_base.txt
 
       - name: added files
         run: |
@@ -51,17 +65,6 @@ jobs:
               cp "$file" "$child_dir_name/$file"
             fi
           done < $dir_name/modified_files.txt
-
-      - name: Fetch pull request branch name
-        id: get_branch
-        run: |
-          pr_number=${{ github.event.inputs.pr_number }}
-          branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
-          branch_name_escaped=$(echo "$branch_name" | sed 's|/|_|g')
-          echo "branch_name=$branch_name" >> $GITHUB_ENV
-          echo "branch_name_escaped=$branch_name_escaped" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Zip artifact
         run: zip -r ${{ env.dir_name }}.zip ${{ env.dir_name }}
