@@ -24,6 +24,10 @@ jobs:
           branch_name_escaped=$(echo "$branch_name" | sed 's|/|_|g')
           echo "branch_name=$branch_name" >> $GITHUB_ENV
           echo "branch_name_escaped=$branch_name_escaped" >> $GITHUB_ENV
+
+          # test
+          gh pr view $pr_number --json commits | jq '.commits | map(select(.merge_commit == null))[0].sha' > $dir_name/first.txt
+          gh pr view $pr_number --json commits | jq '.commits | map(select(.merge_commit != null))[-1].sha' > $dir_name/last.txt
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
