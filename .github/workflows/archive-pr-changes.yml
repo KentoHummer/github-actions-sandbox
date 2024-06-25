@@ -26,6 +26,7 @@ jobs:
           echo "branch_name_escaped=$branch_name_escaped" >> $GITHUB_ENV
 
           # test
+          dir_name=release_resources
           gh pr view $pr_number --json commits | jq '.commits | map(select(.merge_commit == null))[0].sha' > $dir_name/first.txt
           gh pr view $pr_number --json commits | jq '.commits | map(select(.merge_commit != null))[-1].sha' > $dir_name/last.txt
         env:
