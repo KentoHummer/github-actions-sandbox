@@ -40,7 +40,10 @@ jobs:
           git diff --name-only --diff-filter=D pr-$pr_number origin/develop > $dir_name/deleted_files.txt
 
           # test
-          git merge-base pr-$pr_number origin/develop > $dir_name/merge_base.txt
+          base_branch=$(gh pr view $pr_number --json baseRefName -q .baseRefName)
+          branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
+          echo "$base_branch"
+          echo "$branch_name"
 
       - name: added files
         run: |
