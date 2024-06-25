@@ -26,7 +26,7 @@ jobs:
         run: |
           pr_branch=${{ steps.pr_branch.outputs.branch }}
           git fetch origin $pr_branch
-          git diff --name-only origin/develop...$pr_branch > changed_files.txt
+          git diff --name-only origin/develop..$pr_branch > changed_files.txt
           cat changed_files.txt
           zip -r pr_changes.zip $(cat changed_files.txt)
 
