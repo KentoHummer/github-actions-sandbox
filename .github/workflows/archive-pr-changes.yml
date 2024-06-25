@@ -39,14 +39,6 @@ jobs:
           git diff --name-only --diff-filter=M pr-$pr_number origin/develop > $dir_name/modified_files.txt
           git diff --name-only --diff-filter=D pr-$pr_number origin/develop > $dir_name/deleted_files.txt
 
-          # test
-          base_branch=$(gh pr view $pr_number --json baseRefName -q .baseRefName)
-          branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
-          echo "$base_branch"
-          echo "$branch_name"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: added files
         run: |
           dir_name=${{ env.dir_name }}
