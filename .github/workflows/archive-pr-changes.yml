@@ -1,4 +1,4 @@
-name: Archive PR Changes
+name: Archive PR Files
 
 on:
   workflow_dispatch:
@@ -16,26 +16,54 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Fetch pull request branch name
+        id: get_branch
+        run: |
+          pr_number=${{ github.event.inputs.pr_number }}
+          branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
+          echo "::set-output name=branch_name::$branch_name"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Fetch pull request files
         id: fetch_files
         run: |
           pr_number=${{ github.event.inputs.pr_number }}
+          branch_name=${{ steps.get_branch.outputs.branch_name }}
+          dir_name=release_resources
+          mkdir -p $dir_name
+          echo "::set-output name=dir_name::$dir_name"
           git fetch origin pull/$pr_number/head:pr-$pr_number
-          git diff --name-only origin/develop pr-$pr_number > changed_files.txt
+          git diff --name-only --diff-filter=A origin/develop pr-$pr_number > $dir_name/added_files.txt
+          git diff --name-only --diff-filter=M origin/develop pr-$pr_number > $dir_name/modified_files.txt
+          git diff --name-only --diff-filter=D origin/develop pr-$pr_number > $dir_name/deleted_files.txt
 
-      - name: Zip changed files
+      - name: added files
         run: |
-          mkdir -p archive
+          dir_name=${{ steps.fetch_files.outputs.dir_name }}
+          child_dir_name=$dir_name/added_files
+          mkdir -p $child_dir_name
           while IFS= read -r file; do
             if [ -f "$file" ]; then
-              mkdir -p "$(dirname "archive/$file")"
-              cp "$file" "archive/$file"
+              mkdir -p "$(dirname "$child_dir_name/$file")"
+              cp "$file" "added_files/$file"
             fi
-          done < changed_files.txt
-          zip -r archive.zip archive
+          done < added_files.txt
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
+      - name: modified files
+        run: |
+          dir_name=${{ steps.fetch_files.outputs.dir_name }}
+          child_dir_name=$dir_name/modified_files
+          mkdir -p $child_dir_name
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              mkdir -p "$(dirname "$child_dir_name/$file")"
+              cp "$file" "modified_files/$file"
+            fi
+          done < modified_files.txt
+
+      - name: Upload files artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: pr-$pr_number-files
-          path: archive.zip
+          name: pr-${{ github.event.inputs.pr_number }}-added-files-${{ steps.get_branch.outputs.branch_name }}
+          path: ${{ steps.fetch_files.outputs.dir_name }}/
