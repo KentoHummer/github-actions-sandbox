@@ -24,6 +24,8 @@ jobs:
           branch_name_escaped=$(echo "$branch_name" | sed 's|/|_|g')
           echo "branch_name=$branch_name" >> $GITHUB_ENV
           echo "branch_name_escaped=$branch_name_escaped" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch pull request files
         id: fetch_files
