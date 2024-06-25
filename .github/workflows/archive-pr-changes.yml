@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: 'refs/pull/${{ github.event.inputs.pr_number }}/merge'
 
       - name: Fetch pull request branch name
         id: get_branch
@@ -34,10 +36,9 @@ jobs:
           mkdir -p $dir_name
           echo "dir_name=$dir_name" >> $GITHUB_ENV
           pr_number=${{ github.event.inputs.pr_number }}
-          git fetch origin pull/$pr_number/head:${{ env.branch_name }}
-          git diff --name-only --diff-filter=A ${{ env.branch_name }} origin/develop > $dir_name/added_files.txt
-          git diff --name-only --diff-filter=M ${{ env.branch_name }} origin/develop > $dir_name/modified_files.txt
-          git diff --name-only --diff-filter=D ${{ env.branch_name }} origin/develop > $dir_name/deleted_files.txt
+          git diff --name-only --diff-filter=A origin/develop ${{ env.branch_name }} > $dir_name/added_files.txt
+          git diff --name-only --diff-filter=M origin/develop ${{ env.branch_name }} > $dir_name/modified_files.txt
+          git diff --name-only --diff-filter=D origin/develop ${{ env.branch_name }} > $dir_name/deleted_files.txt
 
           # test
           gh pr view $pr_number --json commits --jq .commits[].oid > $dir_name/commits.txt
