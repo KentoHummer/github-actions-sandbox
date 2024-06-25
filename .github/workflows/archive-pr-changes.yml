@@ -40,7 +40,7 @@ jobs:
           git diff --name-only --diff-filter=D pr-$pr_number origin/develop > $dir_name/deleted_files.txt
 
           # test
-          gh pr view <PR_NUMBER> --json commits --jq .commits[].oid > $dir_name/commits.txt
+          gh pr view $pr_number --json commits --jq .commits[].oid > $dir_name/commits.txt
           head -n 1 $dir_name/commits.txt > $dir_name/first.txt
           tail -n 1 $dir_name/commits.txt > $dir_name/last.txt
         env:
