@@ -28,13 +28,6 @@ jobs:
           git diff --name-only --diff-filter=M pr-$pr_number origin/develop > $dir_name/modified_files.txt
           git diff --name-only --diff-filter=D pr-$pr_number origin/develop > $dir_name/deleted_files.txt
 
-      - name: Debug - List directories and files
-        run: |
-          echo "Listing root directory"
-          ls -al
-          echo "Listing release_resources directory"
-          ls -al release_resources || echo "release_resources directory does not exist"
-
       - name: added files
         run: |
           dir_name=${{ env.dir_name }}
@@ -74,4 +67,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pr#${{ github.event.inputs.pr_number }}-${{ env.branch_name_escaped }}
-          path: ${{ env.dir_name }}/
+          path: ./
