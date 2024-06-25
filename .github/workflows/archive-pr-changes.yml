@@ -44,6 +44,8 @@ jobs:
           branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
           echo "$base_branch"
           echo "$branch_name"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: added files
         run: |
