@@ -63,8 +63,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Zip artifact
+        run: zip -r ${{ env.dir_name }}.zip ${{ env.dir_name }}
+
       - name: Upload files artifact
         uses: actions/upload-artifact@v4
         with:
           name: pr#${{ github.event.inputs.pr_number }}-${{ env.branch_name_escaped }}
-          path: ./
+          path: ${{ env.dir_name }}.zip
