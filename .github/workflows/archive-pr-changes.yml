@@ -22,7 +22,7 @@ jobs:
           pr_number=${{ github.event.inputs.pr_number }}
           dir_name=release_resources
           mkdir -p $dir_name
-          echo "::set-output name=dir_name::$dir_name"
+          echo "dir_name=$dir_name" >> $GITHUB_ENV
           git fetch origin pull/$pr_number/head:pr-$pr_number
           git diff --name-only --diff-filter=A origin/develop pr-$pr_number > $dir_name/added_files.txt
           git diff --name-only --diff-filter=M origin/develop pr-$pr_number > $dir_name/modified_files.txt
@@ -30,7 +30,7 @@ jobs:
 
       - name: added files
         run: |
-          dir_name=${{ steps.fetch_files.outputs.dir_name }}
+          dir_name=${{ env.dir_name }}
           child_dir_name=$dir_name/added_files
           mkdir -p $child_dir_name
           while IFS= read -r file; do
@@ -42,7 +42,7 @@ jobs:
 
       - name: modified files
         run: |
-          dir_name=${{ steps.fetch_files.outputs.dir_name }}
+          dir_name=${{ env.dir_name }}
           child_dir_name=$dir_name/modified_files
           mkdir -p $child_dir_name
           while IFS= read -r file; do
@@ -58,13 +58,13 @@ jobs:
           pr_number=${{ github.event.inputs.pr_number }}
           branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
           branch_name_escaped=$(echo "$branch_name" | sed 's|/|_|g')
-          echo "::set-output name=branch_name::$branch_name"
-          echo "::set-output name=branch_name_escaped::$branch_name_escaped"
+          echo "branch_name=$branch_name" >> $GITHUB_ENV
+          echo "branch_name_escaped=$branch_name_escaped" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload files artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pr-${{ github.event.inputs.pr_number }}-files-${{ steps.get_branch.outputs.branch_name_escaped }}
-          path: ${{ steps.fetch_files.outputs.dir_name }}/
+          name: pr-${{ github.event.inputs.pr_number }}-files-${{ env.branch_name_escaped }}
+          path: ${{ env.dir_name }}/
