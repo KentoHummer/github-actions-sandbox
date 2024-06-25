@@ -40,7 +40,7 @@ jobs:
           git diff --name-only --diff-filter=D pr-$pr_number origin/develop > $dir_name/deleted_files.txt
 
           # test
-          git merge-base ${{ env.branch_name }} origin/develop > $dir_name/merge_base.txt
+          git merge-base pr-$pr_number origin/develop > $dir_name/merge_base.txt
 
       - name: added files
         run: |
