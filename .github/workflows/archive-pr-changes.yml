@@ -21,12 +21,16 @@ jobs:
           pr_branch=$(git ls-remote origin "refs/pull/$pr_number/head" | cut -f2 | sed 's/refs\/heads\///')
           echo "::set-output name=branch::$pr_branch"
 
+      - name: Fetch PR branch
+        run: |
+          pr_branch=${{ steps.pr_branch.outputs.branch }}
+          git fetch origin $pr_branch
+
       - name: Collect PR changes
         id: collect_changes
         run: |
           pr_branch=${{ steps.pr_branch.outputs.branch }}
-          git fetch origin $pr_branch
-          git diff --name-only origin/develop..$pr_branch > changed_files.txt
+          git diff --name-only origin/develop...$pr_branch > changed_files.txt
           cat changed_files.txt
           zip -r pr_changes.zip $(cat changed_files.txt)
 
