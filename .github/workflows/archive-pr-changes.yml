@@ -66,5 +66,5 @@ jobs:
       - name: Upload files artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pr-${{ github.event.inputs.pr_number }}-files-${{ env.branch_name_escaped }}
+          name: pr#${{ github.event.inputs.pr_number }}-${{ env.branch_name_escaped }}
           path: ${{ env.dir_name }}/
