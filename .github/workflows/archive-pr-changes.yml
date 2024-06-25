@@ -1,0 +1,37 @@
+name: Archive PR Changes
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number'
+        required: true
+
+jobs:
+  archive-pr-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find PR branch
+        id: pr_branch
+        run: |
+          pr_number=${{ github.event.inputs.pr_number }}
+          pr_branch=$(git ls-remote origin "refs/pull/$pr_number/head" | cut -f2 | sed 's/refs\/heads\///')
+          echo "::set-output name=branch::$pr_branch"
+
+      - name: Collect PR changes
+        id: collect_changes
+        run: |
+          pr_branch=${{ steps.pr_branch.outputs.branch }}
+          git fetch origin $pr_branch
+          git diff --name-only origin/develop...$pr_branch > changed_files.txt
+          cat changed_files.txt
+          zip -r pr_changes.zip $(cat changed_files.txt)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: pr-changes
+          path: pr_changes.zip
