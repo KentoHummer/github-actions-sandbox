@@ -48,7 +48,7 @@ jobs:
               mkdir -p "$(dirname "$child_dir_name/$file")"
               cp "$file" "added_files/$file"
             fi
-          done < added_files.txt
+          done < $dir_name/added_files.txt
 
       - name: modified files
         run: |
@@ -60,7 +60,7 @@ jobs:
               mkdir -p "$(dirname "$child_dir_name/$file")"
               cp "$file" "modified_files/$file"
             fi
-          done < modified_files.txt
+          done < $dir_name/modified_files.txt
 
       - name: Upload files artifact
         uses: actions/upload-artifact@v4
