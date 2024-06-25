@@ -4,38 +4,38 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number'
+        description: 'Pull Request Number'
         required: true
+        default: ''
 
 jobs:
-  archive-pr-changes:
+  archive:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Find PR branch
-        id: pr_branch
+      - name: Fetch pull request files
+        id: fetch_files
         run: |
           pr_number=${{ github.event.inputs.pr_number }}
-          pr_branch=$(git ls-remote origin "refs/pull/$pr_number/head" | cut -f2 | sed 's/refs\/heads\///')
-          echo "::set-output name=branch::$pr_branch"
+          git fetch origin pull/$pr_number/head:pr-$pr_number
+          git diff --name-only origin/develop pr-$pr_number > changed_files.txt
 
-      - name: Fetch PR branch
+      - name: Zip changed files
         run: |
-          pr_branch=${{ steps.pr_branch.outputs.branch }}
-          git fetch origin $pr_branch
-
-      - name: Collect PR changes
-        id: collect_changes
-        run: |
-          pr_branch=${{ steps.pr_branch.outputs.branch }}
-          git diff --name-only origin/develop...$pr_branch > changed_files.txt
-          cat changed_files.txt
-          zip -r pr_changes.zip $(cat changed_files.txt)
+          mkdir -p archive
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              mkdir -p "$(dirname "archive/$file")"
+              cp "$file" "archive/$file"
+            fi
+          done < changed_files.txt
+          zip -r archive.zip archive
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: pr-changes
-          path: pr_changes.zip
+          name: pr-$pr_number-files
+          path: archive.zip
