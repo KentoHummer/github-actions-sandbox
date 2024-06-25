@@ -19,14 +19,14 @@ jobs:
       - name: Fetch pull request files
         id: fetch_files
         run: |
-          pr_number=${{ github.event.inputs.pr_number }}
           dir_name=release_resources
           mkdir -p $dir_name
           echo "dir_name=$dir_name" >> $GITHUB_ENV
+          pr_number=${{ github.event.inputs.pr_number }}
           git fetch origin pull/$pr_number/head:pr-$pr_number
-          git diff --name-only --diff-filter=A origin/develop pr-$pr_number > $dir_name/added_files.txt
-          git diff --name-only --diff-filter=M origin/develop pr-$pr_number > $dir_name/modified_files.txt
-          git diff --name-only --diff-filter=D origin/develop pr-$pr_number > $dir_name/deleted_files.txt
+          git diff --name-only --diff-filter=A pr-$pr_number origin/develop > $dir_name/added_files.txt
+          git diff --name-only --diff-filter=M pr-$pr_number origin/develop > $dir_name/modified_files.txt
+          git diff --name-only --diff-filter=D pr-$pr_number origin/develop > $dir_name/deleted_files.txt
 
       - name: added files
         run: |
@@ -36,7 +36,7 @@ jobs:
           while IFS= read -r file; do
             if [ -f "$file" ]; then
               mkdir -p "$(dirname "$child_dir_name/$file")"
-              cp "$file" "added_files/$file"
+              cp "$file" "$child_dir_name/$file"
             fi
           done < $dir_name/added_files.txt
 
@@ -48,7 +48,7 @@ jobs:
           while IFS= read -r file; do
             if [ -f "$file" ]; then
               mkdir -p "$(dirname "$child_dir_name/$file")"
-              cp "$file" "modified_files/$file"
+              cp "$file" "$child_dir_name/$file"
             fi
           done < $dir_name/modified_files.txt
 
