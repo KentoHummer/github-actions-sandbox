@@ -25,13 +25,6 @@ jobs:
           echo "branch_name=$branch_name" >> $GITHUB_ENV
           echo "branch_name_escaped=$branch_name_escaped" >> $GITHUB_ENV
 
-          # test
-          dir_name=release_resources
-          gh pr view $pr_number --json commits | jq '.commits | map(select(.merge_commit == null))[0].sha' > $dir_name/first.txt
-          gh pr view $pr_number --json commits | jq '.commits | map(select(.merge_commit != null))[-1].sha' > $dir_name/last.txt
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Fetch pull request files
         id: fetch_files
         run: |
@@ -43,6 +36,12 @@ jobs:
           git diff --name-only --diff-filter=A pr-$pr_number origin/develop > $dir_name/added_files.txt
           git diff --name-only --diff-filter=M pr-$pr_number origin/develop > $dir_name/modified_files.txt
           git diff --name-only --diff-filter=D pr-$pr_number origin/develop > $dir_name/deleted_files.txt
+
+          # test
+          gh pr view $pr_number --json commits | jq '.commits | map(select(.merge_commit == null))[0].sha' > $dir_name/first.txt
+          gh pr view $pr_number --json commits | jq '.commits | map(select(.merge_commit != null))[-1].sha' > $dir_name/last.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: added files
         run: |
