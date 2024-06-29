@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 500
+
       - name: Setup GitHub CLI
         run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
@@ -22,8 +27,6 @@ jobs:
           pr_number=${{ github.event.inputs.pr_number }}
           commits=$(gh pr view $pr_number --json commits --jq '.commits.totalCount')
           echo "commits=$commits" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get latest commit SHA
         id: get_latest_commit
@@ -39,12 +42,6 @@ jobs:
           first_commit_sha=$(gh pr view $pr_number --json commits --jq '.commits[0].oid')
           previous_commit_sha=$(git rev-parse $first_commit_sha^)
           echo "previous_commit_sha=$previous_commit_sha" >> $GITHUB_ENV
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.latest_commit_sha }}
-          fetch-depth: ${{ env.commits }}
 
       - name: Fetch pull request branch name
         id: get_branch
