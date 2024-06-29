@@ -1,4 +1,4 @@
 package kentohummer.gas;
 
-public class Sample3 {
+public class Sample4 {
 }
