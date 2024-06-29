@@ -46,7 +46,7 @@ jobs:
           mkdir -p $dir_name
 
           latest_commit_sha=${{ env.latest_commit_sha }}
-          previous_commit_sha=${{ env.latest_commit_sha }}
+          previous_commit_sha=${{ env.previous_commit_sha }}
           git diff --name-only --diff-filter=A $previous_commit_sha $latest_commit_sha > $dir_name/added_files.txt
           git diff --name-only --diff-filter=M $previous_commit_sha $latest_commit_sha > $dir_name/modified_files.txt
           git diff --name-only --diff-filter=D $previous_commit_sha $latest_commit_sha > $dir_name/deleted_files.txt
