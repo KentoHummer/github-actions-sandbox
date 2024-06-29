@@ -22,41 +22,34 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
       - name: Get latest commit SHA
-        id: get_latest_commit
         run: |
           pr_number=${{ github.event.inputs.pr_number }}
           latest_commit_sha=$(gh pr view $pr_number --json commits --jq '.commits[-1].oid')
           echo "latest_commit_sha=$latest_commit_sha" >> $GITHUB_ENV
 
+      - name: Checkout specific commit
+        run: |
+          latest_commit_sha=${{ env.latest_commit_sha }}
+          git checkout $latest_commit_sha
+
       - name: Get previous commit SHA
-        id: get_previous_commit
         run: |
           pr_number=${{ github.event.inputs.pr_number }}
           first_commit_sha=$(gh pr view $pr_number --json commits --jq '.commits[0].oid')
           previous_commit_sha=$(git rev-parse $first_commit_sha^)
           echo "previous_commit_sha=$previous_commit_sha" >> $GITHUB_ENV
 
-      - name: Fetch pull request branch name
-        id: get_branch
-        run: |
-          pr_number=${{ github.event.inputs.pr_number }}
-          branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
-          branch_name_escaped=$(echo "$branch_name" | sed 's|/|_|g')
-          echo "branch_name=$branch_name" >> $GITHUB_ENV
-          echo "branch_name_escaped=$branch_name_escaped" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Fetch pull request files
-        id: fetch_files
         run: |
           dir_name=release_resources
-          mkdir -p $dir_name
           echo "dir_name=$dir_name" >> $GITHUB_ENV
-          pr_number=${{ github.event.inputs.pr_number }}
-          git diff --name-only --diff-filter=A origin/develop ${{ env.branch_name }} > $dir_name/added_files.txt
-          git diff --name-only --diff-filter=M origin/develop ${{ env.branch_name }} > $dir_name/modified_files.txt
-          git diff --name-only --diff-filter=D origin/develop ${{ env.branch_name }} > $dir_name/deleted_files.txt
+          mkdir -p $dir_name
+
+          latest_commit_sha=${{ env.latest_commit_sha }}
+          previous_commit_sha=${{ env.latest_commit_sha }}
+          git diff --name-only --diff-filter=A $previous_commit_sha $latest_commit_sha > $dir_name/added_files.txt
+          git diff --name-only --diff-filter=M $previous_commit_sha $latest_commit_sha > $dir_name/modified_files.txt
+          git diff --name-only --diff-filter=D $previous_commit_sha $latest_commit_sha > $dir_name/deleted_files.txt
 
       - name: added files
         run: |
@@ -84,6 +77,14 @@ jobs:
 
       - name: Zip artifact
         run: zip -r ${{ env.dir_name }}.zip ${{ env.dir_name }}
+
+      - name: Fetch pull request branch name
+        run: |
+          pr_number=${{ github.event.inputs.pr_number }}
+          branch_name=$(gh pr view $pr_number --json headRefName -q .headRefName)
+          branch_name_escaped=$(echo "$branch_name" | sed 's|/|_|g')
+          echo "branch_name=$branch_name" >> $GITHUB_ENV
+          echo "branch_name_escaped=$branch_name_escaped" >> $GITHUB_ENV
 
       - name: Upload files artifact
         uses: actions/upload-artifact@v4
